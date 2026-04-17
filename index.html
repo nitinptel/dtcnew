@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Delhi Transport Commission — Bus Route & Schedule Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ─── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --navy:       #05101F;
+  --navy-mid:   #0B1E36;
+  --navy-card:  #0F2743;
+  --navy-light: #163353;
+  --saffron:    #FF7722;
+  --saffron-lt: #FF9A50;
+  --amber:      #FFB830;
+  --green:      #00C16E;
+  --green-dk:   #009954;
+  --red:        #FF4757;
+  --sky:        #38BDF8;
+  --white:      #FFFFFF;
+  --off-white:  #EEF2F8;
+  --muted:      #7A93B4;
+  --border:     rgba(255,255,255,0.07);
+  --glow:       rgba(255,119,34,0.18);
+  --radius:     14px;
+  --radius-sm:  8px;
+  --transition: 0.28s cubic-bezier(0.4,0,0.2,1);
+  --font-display: 'Rajdhani', sans-serif;
+  --font-body:    'Noto Sans', sans-serif;
+  --font-deva:    'Noto Sans Devanagari', sans-serif;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--navy);
+  color: var(--white);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { max-width: 100%; display: block; }
+button { cursor: pointer; font-family: inherit; }
+input, select { font-family: inherit; }
+
+/* ─── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--navy); }
+::-webkit-scrollbar-thumb { background: var(--navy-light); border-radius: 3px; }
+
+/* ─── Utility ───────────────────────────────────────────────── */
+.container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
+}
+.tag-green  { background: rgba(0,193,110,0.15); color: var(--green); border: 1px solid rgba(0,193,110,0.3); }
+.tag-red    { background: rgba(255,71,87,0.15);  color: var(--red);   border: 1px solid rgba(255,71,87,0.3); }
+.tag-amber  { background: rgba(255,184,48,0.15); color: var(--amber); border: 1px solid rgba(255,184,48,0.3); }
+.tag-sky    { background: rgba(56,189,248,0.15); color: var(--sky);   border: 1px solid rgba(56,189,248,0.3); }
+.tag-saffron{ background: rgba(255,119,34,0.15); color: var(--saffron);border: 1px solid rgba(255,119,34,0.3); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot-red    { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+.dot-amber  { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.section-label {
+  font-family: var(--font-display); font-size: 12px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--saffron);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--font-display); font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700; line-height: 1.15; color: var(--white);
+}
+.section-sub {
+  font-size: 15px; color: var(--muted); margin-top: 10px; max-width: 520px;
+}
+.card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  transition: var(--transition);
+}
+.card:hover { border-color: rgba(255,119,34,0.25); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+/* ─── Animations ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+}
+@keyframes scroll-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes board-flip {
+  0%   { transform: rotateX(0deg); opacity: 1; }
+  50%  { transform: rotateX(-90deg); opacity: 0; }
+  51%  { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+.animate-up { animation: fadeUp 0.6s ease both; }
+.anim-d1 { animation-delay: 0.05s; }
+.anim-d2 { animation-delay: 0.12s; }
+.anim-d3 { animation-delay: 0.20s; }
+.anim-d4 { animation-delay: 0.28s; }
+.anim-d5 { animation-delay: 0.36s; }
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+#header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: rgba(5,16,31,0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 68px; gap: 24px;
+}
+.logo {
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+.logo-emblem {
+  width: 44px; height: 44px; background: linear-gradient(135deg, var(--saffron), var(--amber));
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--navy);
+  position: relative; overflow: hidden;
+}
+.logo-emblem::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg,rgba(255,255,255,0.25),transparent);
+}
+.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.logo-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 17px;
+  color: var(--white); letter-spacing: 0.5px;
+}
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+
+nav { display: flex; align-items: center; gap: 6px; }
+nav a {
+  padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13.5px;
+  font-weight: 500; color: var(--muted); transition: var(--transition);
+  position: relative;
+}
+nav a:hover, nav a.active { color: var(--white); background: rgba(255,255,255,0.06); }
+nav a.active::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: var(--saffron);
+}
+
+.header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.lang-btn {
+  padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: transparent; color: var(--muted); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px; transition: var(--transition);
+}
+.lang-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+.btn-primary {
+  padding: 9px 20px; border-radius: var(--radius-sm); border: none;
+  background: linear-gradient(135deg, var(--saffron), var(--amber));
+  color: var(--navy); font-weight: 700; font-size: 13px; letter-spacing: 0.3px;
+  transition: var(--transition); position: relative; overflow: hidden;
+}
+.btn-primary::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+  opacity:0; transition: var(--transition);
+}
+.btn-primary:hover::after { opacity:1; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,119,34,0.4); }
+.hamburger {
+  display: none; flex-direction: column; gap: 5px; background: transparent;
+  border: none; padding: 6px; cursor: pointer;
+}
+.hamburger span {
+  display: block; width: 22px; height: 2px; background: var(--white); border-radius: 2px;
+  transition: var(--transition);
+}
+.mobile-nav {
+  display: none; position: fixed; top: 68px; left: 0; right: 0;
+  background: var(--navy-mid); border-bottom: 1px solid var(--border);
+  padding: 16px 24px 20px; flex-direction: column; gap: 4px; z-index: 998;
+}
+.mobile-nav.open { display: flex; }
+.mobile-nav a {
+  padding: 12px 16px; border-radius: var(--radius-sm); color: var(--muted);
+  font-size: 14px; font-weight: 500; transition: var(--transition);
+}
+.mobile-nav a:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+
+/* ─── HERO ──────────────────────────────────────────────────── */
+#hero {
+  min-height: 100vh; padding: 140px 0 80px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 70% at 70% 50%, rgba(255,119,34,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 20% 80%, rgba(56,189,248,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, var(--navy) 0%, #060F1C 100%);
+}
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 80%);
+}
+.hero-inner {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 20px;
+  background: rgba(255,119,34,0.1); border: 1px solid rgba(255,119,34,0.3);
+  font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--saffron); margin-bottom: 20px;
+}
+.hero-badge .live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--saffron);
+  animation: blink 1.5s infinite;
+}
+.hero-title {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 68px);
+  font-weight: 700; line-height: 1.08; color: var(--white); margin-bottom: 8px;
+}
+.hero-title .accent { color: var(--saffron); }
+.hero-title-deva {
+  font-family: var(--font-deva); font-size: clamp(16px, 2.5vw, 26px);
+  font-weight: 600; color: var(--muted); margin-bottom: 20px; line-height: 1.5;
+}
+.hero-desc {
+  font-size: 16px; color: var(--muted); max-width: 440px; margin-bottom: 36px; line-height: 1.7;
+}
+
+/* Search Box */
+.search-box {
+  background: var(--navy-card); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius); overflow: hidden;
+}
+.search-tabs {
+  display: flex; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
+}
+.search-tab {
+  flex: 1; padding: 14px; background: transparent; border: none; color: var(--muted);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.3px; transition: var(--transition);
+  position: relative;
+}
+.search-tab.active { color: var(--saffron); background: rgba(255,119,34,0.06); }
+.search-tab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--saffron);
+}
+.search-fields { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.field-group {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.field {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.field label {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  letter-spacing: 0.8px; text-transform: uppercase;
+}
+.field input, .field select {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--radius-sm); padding: 11px 14px; color: var(--white);
+  font-size: 14px; transition: var(--transition);
+  -webkit-appearance: none;
+}
+.field input::placeholder { color: var(--muted); }
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--saffron); background: rgba(255,119,34,0.04);
+}
+.field select option { background: var(--navy-mid); }
+.btn-search {
+  width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--saffron), var(--amber));
+  color: var(--navy); font-weight: 700; font-size: 15px;
+  letter-spacing: 0.3px; transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-search:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,119,34,0.4); }
+
+/* Hero Stats */
+.hero-stats {
+  display: flex; gap: 32px; margin-top: 32px;
+}
+.hero-stat {}
+.hero-stat .num {
+  font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1;
+  color: var(--white);
+}
+.hero-stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* Hero Visual */
+.hero-visual { position: relative; }
+.bus-map-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden; position: relative;
+}
+.map-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.map-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.map-time { font-size: 12px; color: var(--muted); }
+.map-canvas {
+  position: relative; height: 320px;
+  background: linear-gradient(160deg, #081220 0%, #0a1a2e 100%);
+  overflow: hidden;
+}
+/* SVG Map roads */
+.map-canvas svg { width: 100%; height: 100%; }
+.bus-marker {
+  position: absolute; width: 28px; height: 28px;
+  background: var(--saffron); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--navy);
+  box-shadow: 0 0 0 4px rgba(255,119,34,0.2), 0 4px 12px rgba(0,0,0,0.4);
+  transition: all 2s ease;
+  cursor: pointer;
+}
+.bus-marker::before {
+  content: ''; position: absolute; inset: -6px;
+  border-radius: 50%; border: 2px solid rgba(255,119,34,0.4);
+  animation: pulse-ring 2s infinite;
+}
+.map-legend {
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 20px; flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.legend-line { width: 20px; height: 3px; border-radius: 2px; }
+
+/* Floating cards */
+.float-card {
+  position: absolute; background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 16px; backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.float-card-1 { top: -20px; right: -10px; min-width: 180px; }
+.float-card-2 { bottom: 20px; left: -20px; min-width: 160px; }
+.fc-label { font-size: 10px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+.fc-value { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.fc-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ─── MARQUEE ────────────────────────────────────────────────── */
+.marquee-strip {
+  background: rgba(255,119,34,0.08); border-top: 1px solid rgba(255,119,34,0.15);
+  border-bottom: 1px solid rgba(255,119,34,0.15);
+  padding: 10px 0; overflow: hidden;
+}
+.marquee-inner {
+  display: flex; gap: 60px; white-space: nowrap;
+  animation: scroll-x 30s linear infinite;
+  width: max-content;
+}
+.marquee-inner:hover { animation-play-state: paused; }
+.marquee-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; font-weight: 500; color: var(--muted);
+}
+.marquee-item strong { color: var(--saffron); }
+.marquee-sep { color: rgba(255,119,34,0.3); }
+
+/* ─── STATS SECTION ─────────────────────────────────────────── */
+#stats { padding: 80px 0; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stat-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 24px; position: relative; overflow: hidden;
+  transition: var(--transition);
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card:nth-child(1)::before { background: linear-gradient(90deg, var(--saffron), var(--amber)); }
+.stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--green), #00e87b); }
+.stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--sky), #a5f3fc); }
+.stat-card:nth-child(4)::before { background: linear-gradient(90deg, #A78BFA, #C4B5FD); }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; margin-bottom: 16px; font-size: 22px;
+}
+.stat-card:nth-child(1) .stat-icon { background: rgba(255,119,34,0.12); }
+.stat-card:nth-child(2) .stat-icon { background: rgba(0,193,110,0.12); }
+.stat-card:nth-child(3) .stat-icon { background: rgba(56,189,248,0.12); }
+.stat-card:nth-child(4) .stat-icon { background: rgba(167,139,250,0.12); }
+.stat-number {
+  font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-card:nth-child(1) .stat-number { color: var(--saffron); }
+.stat-card:nth-child(2) .stat-number { color: var(--green); }
+.stat-card:nth-child(3) .stat-number { color: var(--sky); }
+.stat-card:nth-child(4) .stat-number { color: #C4B5FD; }
+.stat-label { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+.stat-trend {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600;
+}
+.trend-up { color: var(--green); }
+.trend-dn { color: var(--red); }
+
+/* ─── DEPARTURE BOARD ───────────────────────────────────────── */
+#departures { padding: 80px 0; background: var(--navy-mid); }
+.board-header {
+  display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px;
+  flex-wrap: wrap; gap: 16px;
+}
+.board-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 500;
+  transition: var(--transition); cursor: pointer;
+}
+.filter-btn.active, .filter-btn:hover {
+  background: rgba(255,119,34,0.1); border-color: rgba(255,119,34,0.3);
+  color: var(--saffron);
+}
+.board-table-wrap {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.board-table { width: 100%; border-collapse: collapse; }
+.board-table thead th {
+  padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+  background: rgba(0,0,0,0.25); border-bottom: 1px solid var(--border);
+}
+.board-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: var(--transition);
+}
+.board-table tbody tr:last-child { border-bottom: none; }
+.board-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+.board-table td { padding: 16px 20px; font-size: 14px; }
+.route-num {
+  display: inline-block; padding: 4px 10px; border-radius: 6px;
+  background: rgba(255,119,34,0.12); color: var(--saffron);
+  font-family: var(--font-display); font-size: 16px; font-weight: 700; border: 1px solid rgba(255,119,34,0.25);
+}
+.dep-time { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--white); }
+.plat-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; font-size: 12px; font-weight: 700;
+  background: rgba(56,189,248,0.1); color: var(--sky); border: 1px solid rgba(56,189,248,0.25);
+}
+.progress-bar-wrap { width: 80px; background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; }
+.progress-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+/* ─── ROUTES ────────────────────────────────────────────────── */
+#routes { padding: 80px 0; }
+.routes-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 36px; flex-wrap: wrap; gap: 20px;
+}
+.routes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.route-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: var(--transition); cursor: pointer;
+}
+.route-card:hover { border-color: rgba(255,119,34,0.3); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+.route-card-top {
+  padding: 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.route-id {
+  font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--saffron);
+}
+.route-card-body { padding: 20px; }
+.route-endpoints { margin-bottom: 16px; }
+.endpoint { display: flex; align-items: flex-start; gap: 12px; }
+.endpoint + .endpoint { margin-top: 10px; }
+.ep-icon {
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 2px;
+}
+.ep-start { background: rgba(0,193,110,0.15); color: var(--green); }
+.ep-end   { background: rgba(255,71,87,0.15);  color: var(--red); }
+.ep-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.ep-name  { font-size: 14px; font-weight: 600; color: var(--white); margin-top: 2px; }
+.route-meta {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+  padding-top: 16px; border-top: 1px solid var(--border);
+}
+.route-meta-item { text-align: center; }
+.meta-val { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--white); }
+.meta-key { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
+
+/* ─── SCHEDULE ──────────────────────────────────────────────── */
+#schedule { padding: 80px 0; background: var(--navy-mid); }
+.schedule-layout { display: grid; grid-template-columns: 340px 1fr; gap: 28px; }
+.schedule-sidebar {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.sidebar-head {
+  padding: 20px; border-bottom: 1px solid var(--border);
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+}
+.route-list { overflow-y: auto; max-height: 480px; }
+.route-list::-webkit-scrollbar { width: 4px; }
+.route-list-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: var(--transition);
+}
+.route-list-item:hover { background: rgba(255,255,255,0.03); }
+.route-list-item.active { background: rgba(255,119,34,0.06); border-left: 3px solid var(--saffron); }
+.rli-left { display: flex; align-items: center; gap: 12px; }
+.rli-num {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--saffron);
+  min-width: 40px;
+}
+.rli-name { font-size: 13px; color: var(--white); font-weight: 500; }
+.rli-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.rli-count { font-size: 12px; color: var(--muted); }
+.schedule-main {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.schedule-main-head {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.schedule-route-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.time-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+}
+.time-col-head {
+  padding: 12px 20px; background: rgba(0,0,0,0.2);
+  font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); display: flex; align-items: center; gap: 8px;
+}
+.time-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.time-panel { padding: 20px; overflow-y: auto; max-height: 360px; }
+.time-panel:first-child { border-right: 1px solid var(--border); }
+.time-slot {
+  display: inline-flex; align-items: center; gap: 8px; margin: 4px 8px 4px 0;
+  padding: 7px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--white);
+  transition: var(--transition); cursor: default;
+}
+.time-slot:hover { background: rgba(255,119,34,0.08); border-color: rgba(255,119,34,0.2); color: var(--saffron); }
+.time-slot.peak { border-color: rgba(255,184,48,0.3); background: rgba(255,184,48,0.06); }
+.time-slot .ts-min { font-size: 12px; color: var(--muted); font-family: var(--font-body); }
+
+/* ─── FLEET ─────────────────────────────────────────────────── */
+#fleet { padding: 80px 0; }
+.fleet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.fleet-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  transition: var(--transition); cursor: pointer; position: relative; overflow: hidden;
+}
+.fleet-card::after {
+  content: ''; position: absolute; bottom: -20px; right: -20px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,119,34,0.08) 0%, transparent 70%);
+  transition: var(--transition);
+}
+.fleet-card:hover { transform: translateY(-4px); border-color: rgba(255,119,34,0.3); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+.fleet-card:hover::after { width: 140px; height: 140px; bottom: -40px; right: -40px; }
+.fleet-icon { font-size: 36px; margin-bottom: 16px; }
+.fleet-type {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  margin-bottom: 4px; color: var(--white);
+}
+.fleet-count {
+  font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--saffron);
+  margin-bottom: 4px;
+}
+.fleet-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.fleet-bar { background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; margin-bottom: 8px; }
+.fleet-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,var(--saffron),var(--amber)); }
+.fleet-pct { font-size: 12px; color: var(--muted); }
+
+/* ─── ALERTS ─────────────────────────────────────────────────── */
+#alerts { padding: 80px 0; background: var(--navy-mid); }
+.alerts-layout { display: grid; grid-template-columns: 1fr 400px; gap: 28px; }
+.alerts-list { display: flex; flex-direction: column; gap: 16px; }
+.alert-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; display: flex; gap: 16px;
+  transition: var(--transition);
+}
+.alert-card:hover { border-color: rgba(255,255,255,0.1); }
+.alert-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.alert-critical .alert-icon-wrap { background: rgba(255,71,87,0.12); }
+.alert-warning  .alert-icon-wrap { background: rgba(255,184,48,0.12); }
+.alert-info     .alert-icon-wrap { background: rgba(56,189,248,0.12); }
+.alert-body { flex: 1; }
+.alert-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.alert-desc { font-size: 13px; color: var(--muted); margin-bottom: 10px; line-height: 1.55; }
+.alert-meta { display: flex; align-items: center; gap: 16px; }
+.alert-time { font-size: 11px; color: var(--muted); }
+.alert-routes { display: flex; gap: 6px; flex-wrap: wrap; }
+.alert-route-badge {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.06); color: var(--muted);
+}
+
+/* Quick Actions */
+.quick-actions-panel {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.qap-head {
+  padding: 20px; border-bottom: 1px solid var(--border);
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+}
+.qap-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.qa-btn {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: transparent; color: var(--white); transition: var(--transition); cursor: pointer;
+  text-align: left; width: 100%;
+}
+.qa-btn:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
+.qa-icon {
+  width: 38px; height: 38px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.qa-label { font-size: 13.5px; font-weight: 600; }
+.qa-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+/* ─── ANALYTICS ─────────────────────────────────────────────── */
+#analytics { padding: 80px 0; }
+.analytics-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 28px; }
+.chart-card {
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.chart-head {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.chart-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+.chart-body { padding: 24px; }
+/* Bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 200px; padding-top: 20px; }
+.bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bar-value { font-size: 11px; color: var(--muted); }
+.bar-wrap { width: 100%; display: flex; gap: 4px; align-items: flex-end; }
+.bar {
+  flex: 1; border-radius: 4px 4px 0 0; min-height: 8px;
+  transition: height 0.6s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.bar:hover { filter: brightness(1.2); }
+.bar-label { font-size: 11px; color: var(--muted); text-align: center; }
+/* Donut */
+.donut-wrap { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+.donut-svg { width: 160px; height: 160px; }
+.donut-legend { width: 100%; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.dl-item { display: flex; align-items: center; justify-content: space-between; }
+.dl-left { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.dl-dot { width: 10px; height: 10px; border-radius: 3px; }
+.dl-pct { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+
+/* ─── FOOTER ────────────────────────────────────────────────── */
+footer {
+  background: var(--navy-mid); border-top: 1px solid var(--border);
+  padding: 64px 0 32px;
+}
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px;
+}
+.footer-brand { max-width: 300px; }
+.footer-brand p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-top: 16px; margin-bottom: 20px; }
+.social-links { display: flex; gap: 10px; }
+.social-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--muted); transition: var(--transition); cursor: pointer;
+}
+.social-btn:hover { border-color: rgba(255,119,34,0.3); color: var(--saffron); }
+.footer-col h4 {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--white); margin-bottom: 16px;
+}
+.footer-col li + li { margin-top: 10px; }
+.footer-col a { font-size: 13.5px; color: var(--muted); transition: var(--transition); }
+.footer-col a:hover { color: var(--saffron); }
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  padding-top: 24px; border-top: 1px solid var(--border);
+}
+.footer-copy { font-size: 13px; color: var(--muted); }
+.footer-flags { display: flex; align-items: center; gap: 10px; }
+.flag-stripe { height: 20px; width: 6px; border-radius: 2px; }
+.gov-badge {
+  padding: 4px 12px; border: 1px solid rgba(255,119,34,0.25);
+  border-radius: 4px; font-size: 11px; color: var(--saffron); letter-spacing: 0.5px;
+}
+
+/* ─── MODAL ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: var(--transition);
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--navy-card); border: 1px solid var(--border); border-radius: 20px;
+  width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+  transform: scale(0.95) translateY(16px); transition: var(--transition);
+}
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+.modal-head {
+  padding: 24px 28px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.modal-close {
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: var(--transition);
+}
+.modal-close:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+.modal-body { padding: 28px; }
+
+/* ─── NOTIFICATION TOAST ──────────────────────────────────────  */
+.toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 1100;
+  background: var(--navy-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4); transform: translateY(80px) scale(0.95);
+  opacity: 0; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); pointer-events: none;
+  max-width: 320px; border-left: 3px solid var(--green);
+}
+.toast.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+.toast-icon { font-size: 20px; }
+.toast-text { font-size: 13.5px; color: var(--white); }
+.toast-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ─── RESPONSIVE ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .stats-grid       { grid-template-columns: repeat(2,1fr); }
+  .routes-grid      { grid-template-columns: repeat(2,1fr); }
+  .fleet-grid       { grid-template-columns: repeat(2,1fr); }
+  .footer-grid      { grid-template-columns: 1fr 1fr; }
+  .schedule-layout  { grid-template-columns: 1fr; }
+  .analytics-grid   { grid-template-columns: 1fr; }
+  .alerts-layout    { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  nav, .header-actions .btn-primary, .header-actions .lang-btn { display: none; }
+  .hamburger { display: flex; }
+  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .hero-visual { order: -1; }
+  .float-card-1, .float-card-2 { display: none; }
+}
+@media (max-width: 660px) {
+  .stats-grid    { grid-template-columns: 1fr; }
+  .routes-grid   { grid-template-columns: 1fr; }
+  .fleet-grid    { grid-template-columns: 1fr 1fr; }
+  .footer-grid   { grid-template-columns: 1fr; }
+  .field-group   { grid-template-columns: 1fr; }
+  .hero-stats    { gap: 20px; flex-wrap: wrap; }
+  .board-table thead th:nth-child(5),
+  .board-table tbody td:nth-child(5),
+  .board-table thead th:nth-child(6),
+  .board-table tbody td:nth-child(6) { display: none; }
+  .time-grid     { grid-template-columns: 1fr; }
+  .time-cols     { grid-template-columns: 1fr; }
+  .time-panel:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ════════════════════════════════════════════════ -->
+<header id="header">
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-emblem">DTC</div>
+        <div class="logo-text">
+          <span class="logo-title">Delhi Transport Commission</span>
+          <span class="logo-sub">Government of NCT of Delhi</span>
+        </div>
+      </div>
+
+      <nav>
+        <a href="#hero"       class="active">Home</a>
+        <a href="#departures">Departures</a>
+        <a href="#routes">Routes</a>
+        <a href="#schedule">Schedule</a>
+        <a href="#fleet">Fleet</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#alerts">Alerts</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="lang-btn" onclick="toggleLang(this)">हिंदी</button>
+        <button class="btn-primary" onclick="openModal('login')">🔐 Admin Login</button>
+      </div>
+
+      <button class="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="#hero"       onclick="closeNav()">🏠 Home</a>
+  <a href="#departures" onclick="closeNav()">🚌 Departures</a>
+  <a href="#routes"     onclick="closeNav()">🗺 Routes</a>
+  <a href="#schedule"   onclick="closeNav()">🕐 Schedule</a>
+  <a href="#fleet"      onclick="closeNav()">🚍 Fleet</a>
+  <a href="#analytics"  onclick="closeNav()">📊 Analytics</a>
+  <a href="#alerts"     onclick="closeNav()">🔔 Alerts</a>
+</div>
+
+<!-- ═══ HERO ══════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content animate-up">
+        <div class="hero-badge"><span class="live-dot"></span>Live System — 1,843 Buses Active</div>
+        <h1 class="hero-title">Smart Route &<br><span class="accent">Schedule</span> Control</h1>
+        <p class="hero-title-deva">दिल्ली परिवहन आयोग — यात्रा प्रबंधन प्रणाली</p>
+        <p class="hero-desc">Real-time bus tracking, intelligent scheduling, and comprehensive route management for Delhi's public transport network.</p>
+
+        <div class="search-box animate-up anim-d2">
+          <div class="search-tabs">
+            <button class="search-tab active" onclick="switchTab(this,'find-bus')">🔍 Find Bus</button>
+            <button class="search-tab"        onclick="switchTab(this,'route-info')">🗺 Route Info</button>
+            <button class="search-tab"        onclick="switchTab(this,'live-track')">📡 Live Track</button>
+          </div>
+          <div class="search-fields">
+            <div class="field-group" id="find-bus">
+              <div class="field">
+                <label>From Stop</label>
+                <input type="text" placeholder="e.g. Connaught Place" id="fromStop" list="stops" />
+                <datalist id="stops">
+                  <option value="Connaught Place"></option><option value="AIIMS"></option>
+                  <option value="India Gate"></option><option value="Kashmere Gate ISBT"></option>
+                  <option value="Anand Vihar ISBT"></option><option value="Nehru Place"></option>
+                  <option value="Dwarka Sector 21"></option><option value="Rajiv Chowk"></option>
+                  <option value="Lajpat Nagar"></option><option value="Saket"></option>
+                  <option value="Rohini Sector 3"></option><option value="Hauz Khas"></option>
+                </datalist>
+              </div>
+              <div class="field">
+                <label>To Stop</label>
+                <input type="text" placeholder="e.g. AIIMS" id="toStop" list="stops" />
+              </div>
+            </div>
+            <div class="field-group">
+              <div class="field">
+                <label>Date</label>
+                <input type="date" id="tripDate" />
+              </div>
+              <div class="field">
+                <label>Bus Type</label>
+                <select>
+                  <option>All Types</option>
+                  <option>Low Floor AC</option>
+                  <option>Standard CNG</option>
+                  <option>Electric EV</option>
+                  <option>Express</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-search" onclick="searchBus()">
+              <span>🔍</span> Search Buses
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-stats animate-up anim-d4">
+          <div class="hero-stat">
+            <div class="num" data-target="6800">0</div>
+            <div class="lbl">Total Buses</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num" data-target="726">0</div>
+            <div class="lbl">Routes</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num" data-target="4500000">0</div>
+            <div class="lbl">Daily Passengers</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual animate-up anim-d3">
+        <!-- Floating stat cards -->
+        <div class="float-card float-card-1">
+          <div class="fc-label">On-Time Rate</div>
+          <div class="fc-value" style="color:var(--green)">87.4%</div>
+          <div class="fc-sub">↑ 2.1% vs yesterday</div>
+        </div>
+        <div class="float-card float-card-2">
+          <div class="fc-label">Active Drivers</div>
+          <div class="fc-value" style="color:var(--sky)">2,341</div>
+          <div class="fc-sub">On duty right now</div>
+        </div>
+
+        <!-- Map card -->
+        <div class="bus-map-card">
+          <div class="map-header">
+            <span class="map-title">🗺 Delhi Live Bus Map</span>
+            <span class="map-time" id="liveTime">--:-- --</span>
+          </div>
+          <div class="map-canvas" id="mapCanvas">
+            <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+              <!-- Background roads -->
+              <defs>
+                <radialGradient id="mapGrad" cx="50%" cy="50%" r="60%">
+                  <stop offset="0%" stop-color="#0D2545"/>
+                  <stop offset="100%" stop-color="#081220"/>
+                </radialGradient>
+              </defs>
+              <rect width="500" height="300" fill="url(#mapGrad)"/>
+              <!-- Ring roads -->
+              <ellipse cx="250" cy="150" rx="110" ry="80" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="12"/>
+              <ellipse cx="250" cy="150" rx="60"  ry="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+              <!-- Major corridors -->
+              <line x1="0"   y1="150" x2="500" y2="150" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+              <line x1="250" y1="0"   x2="250" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+              <line x1="60"  y1="30"  x2="440" y2="270" stroke="rgba(255,255,255,0.05)" stroke-width="4"/>
+              <line x1="440" y1="30"  x2="60"  y2="270" stroke="rgba(255,255,255,0.05)" stroke-width="4"/>
+              <!-- Bus Routes coloured lines -->
+              <path d="M 40,150 Q 120,80 250,150 T 460,150" fill="none" stroke="rgba(255,119,34,0.5)" stroke-width="2.5" stroke-dasharray="8,4"/>
+              <path d="M 250,20 Q 320,100 250,150 T 250,280" fill="none" stroke="rgba(0,193,110,0.5)" stroke-width="2.5" stroke-dasharray="8,4"/>
+              <path d="M 60,50 L 440,250" fill="none" stroke="rgba(56,189,248,0.4)" stroke-width="2" stroke-dasharray="6,4"/>
+              <!-- Landmark dots -->
+              <circle cx="250" cy="150" r="5" fill="rgba(255,119,34,0.8)"/>
+              <circle cx="140" cy="90"  r="4" fill="rgba(255,255,255,0.3)"/>
+              <circle cx="360" cy="90"  r="4" fill="rgba(255,255,255,0.3)"/>
+              <circle cx="140" cy="210" r="4" fill="rgba(255,255,255,0.3)"/>
+              <circle cx="360" cy="210" r="4" fill="rgba(255,255,255,0.3)"/>
+              <circle cx="80"  cy="150" r="4" fill="rgba(255,255,255,0.3)"/>
+              <circle cx="420" cy="150" r="4" fill="rgba(255,255,255,0.3)"/>
+              <!-- Labels -->
+              <text x="248" y="142" font-size="9" fill="rgba(255,119,34,0.9)" text-anchor="middle" font-family="Rajdhani,sans-serif" font-weight="700">CP</text>
+              <text x="138" y="84" font-size="8" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="Rajdhani,sans-serif">KASHMERE</text>
+              <text x="362" y="84" font-size="8" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="Rajdhani,sans-serif">ANAND VIHAR</text>
+              <text x="138" y="218" font-size="8" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="Rajdhani,sans-serif">DWARKA</text>
+              <text x="362" y="218" font-size="8" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="Rajdhani,sans-serif">SAKET</text>
+              <text x="78"  y="158" font-size="8" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="Rajdhani,sans-serif">ROHINI</text>
+              <text x="418" y="158" font-size="8" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="Rajdhani,sans-serif">NOIDA</text>
+            </svg>
+            <!-- Animated bus markers (positioned as % via inline style) -->
+            <div class="bus-marker" style="top:38%;left:55%;" title="Bus 423">🚌</div>
+            <div class="bus-marker" style="top:22%;left:28%;background:var(--green);box-shadow:0 0 0 4px rgba(0,193,110,0.2);" title="Bus 076">🚍</div>
+            <div class="bus-marker" style="top:62%;left:72%;background:var(--sky);box-shadow:0 0 0 4px rgba(56,189,248,0.2);" title="Bus 881">⚡</div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-line" style="background:rgba(255,119,34,0.7)"></div>Ring Route</div>
+            <div class="legend-item"><div class="legend-line" style="background:rgba(0,193,110,0.7)"></div>North-South</div>
+            <div class="legend-item"><div class="legend-line" style="background:rgba(56,189,248,0.7)"></div>Express</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MARQUEE ═══════════════════════════════════════════════ -->
+<div class="marquee-strip">
+  <div class="marquee-inner">
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>423</strong>: On Time — Kashmere Gate ISBT → AIIMS</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-amber"></span> Route <strong>544</strong>: 8 min delay — Anand Vihar → Dwarka Sector 21</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>76</strong>: On Time — Rohini Sector 3 → Nehru Place</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>881</strong>: On Time — Delhi Gate → Saket</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-amber"></span> Route <strong>101</strong>: 5 min delay — Lajpat Nagar → Connaught Place</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>330</strong>: On Time — Hauz Khas → ISBT Sarai Kale Khan</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>423</strong>: On Time — Kashmere Gate ISBT → AIIMS</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-amber"></span> Route <strong>544</strong>: 8 min delay — Anand Vihar → Dwarka Sector 21</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>76</strong>: On Time — Rohini Sector 3 → Nehru Place</div>
+    <div class="marquee-sep">◆</div>
+    <div class="marquee-item"><span class="dot dot-green"></span> Route <strong>881</strong>: On Time — Delhi Gate → Saket</div>
+  </div>
+</div>
+
+<!-- ═══ STATS ══════════════════════════════════════════════════ -->
+<section id="stats">
+  <div class="container">
+    <div class="stats-grid animate-up">
+      <div class="stat-card">
+        <div class="stat-icon">🚌</div>
+        <div class="stat-number">6,800</div>
+        <div class="stat-label">Total Fleet Buses</div>
+        <div class="stat-trend trend-up">↑ 340 added this year</div>
+      </div>
+      <div class="stat-card anim-d1">
+        <div class="stat-icon">🗺</div>
+        <div class="stat-number">726</div>
+        <div class="stat-label">Active Routes</div>
+        <div class="stat-trend trend-up">↑ 18 new routes</div>
+      </div>
+      <div class="stat-card anim-d2">
+        <div class="stat-icon">👥</div>
+        <div class="stat-number">45L</div>
+        <div class="stat-label">Daily Passengers</div>
+        <div class="stat-trend trend-up">↑ 12% this month</div>
+      </div>
+      <div class="stat-card anim-d3">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-number">87%</div>
+        <div class="stat-label">On-Time Performance</div>
+        <div class="stat-trend trend-up">↑ 4.2% improvement</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DEPARTURE BOARD ════════════════════════════════════════ -->
+<section id="departures">
+  <div class="container">
+    <div class="board-header">
+      <div>
+        <div class="section-label">Live Departure Board</div>
+        <h2 class="section-title">Real-Time Departures</h2>
+        <p class="section-sub">Live status of buses departing from major terminals across Delhi.</p>
+      </div>
+      <div class="board-filters">
+        <button class="filter-btn active" onclick="filterDep(this,'all')">All Terminals</button>
+        <button class="filter-btn" onclick="filterDep(this,'kashmere')">Kashmere Gate</button>
+        <button class="filter-btn" onclick="filterDep(this,'anand')">Anand Vihar</button>
+        <button class="filter-btn" onclick="filterDep(this,'sarai')">Sarai Kale Khan</button>
+      </div>
+    </div>
+    <div class="board-table-wrap">
+      <table class="board-table" id="depTable">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Destination</th>
+            <th>Platform</th>
+            <th>Departure</th>
+            <th>Status</th>
+            <th>Occupancy</th>
+          </tr>
+        </thead>
+        <tbody id="depTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROUTES ════════════════════════════════════════════════ -->
+<section id="routes">
+  <div class="container">
+    <div class="routes-header">
+      <div>
+        <div class="section-label">Route Management</div>
+        <h2 class="section-title">Popular Routes</h2>
+        <p class="section-sub">Manage, monitor, and optimise Delhi's extensive bus network routes.</p>
+      </div>
+      <button class="btn-primary" onclick="openModal('addRoute')">+ Add New Route</button>
+    </div>
+    <div class="routes-grid" id="routesGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ SCHEDULE ══════════════════════════════════════════════ -->
+<section id="schedule">
+  <div class="container">
+    <div style="margin-bottom:36px">
+      <div class="section-label">Timetable Management</div>
+      <h2 class="section-title">Bus Schedules</h2>
+      <p class="section-sub">Comprehensive departure and arrival timetables for all routes.</p>
+    </div>
+    <div class="schedule-layout">
+      <div class="schedule-sidebar">
+        <div class="sidebar-head">🗂 Select Route</div>
+        <div class="route-list" id="routeList"></div>
+      </div>
+      <div class="schedule-main">
+        <div class="schedule-main-head">
+          <div>
+            <div class="schedule-route-title" id="scheduleRouteTitle">Route 423 — Kashmere Gate → AIIMS</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Frequency: Every 8–12 minutes during peak hours</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <span class="tag tag-green">Weekdays</span>
+            <span class="tag tag-amber">Weekends</span>
+          </div>
+        </div>
+        <div class="time-cols">
+          <div class="time-col-head">🌅 Towards AIIMS (Southbound)</div>
+          <div class="time-col-head">🌇 Towards Kashmere Gate (Northbound)</div>
+        </div>
+        <div class="time-grid">
+          <div class="time-panel" id="southPanel"></div>
+          <div class="time-panel" id="northPanel"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FLEET ══════════════════════════════════════════════════ -->
+<section id="fleet">
+  <div class="container">
+    <div style="margin-bottom:36px">
+      <div class="section-label">Fleet Management</div>
+      <h2 class="section-title">Bus Fleet Overview</h2>
+      <p class="section-sub">Complete inventory and operational status of DTC's diverse fleet.</p>
+    </div>
+    <div class="fleet-grid animate-up">
+      <div class="fleet-card">
+        <div class="fleet-icon">⚡</div>
+        <div class="fleet-type">Electric EV</div>
+        <div class="fleet-count">1,200</div>
+        <div class="fleet-sub">Zero-emission modern fleet</div>
+        <div class="fleet-bar"><div class="fleet-bar-fill" style="width:82%"></div></div>
+        <div class="fleet-pct">82% operational today</div>
+      </div>
+      <div class="fleet-card anim-d1">
+        <div class="fleet-icon">❄️</div>
+        <div class="fleet-type">Low-Floor AC</div>
+        <div class="fleet-count">2,100</div>
+        <div class="fleet-sub">Premium air-conditioned buses</div>
+        <div class="fleet-bar"><div class="fleet-bar-fill" style="width:76%"></div></div>
+        <div class="fleet-pct">76% operational today</div>
+      </div>
+      <div class="fleet-card anim-d2">
+        <div class="fleet-icon">🚍</div>
+        <div class="fleet-type">Standard CNG</div>
+        <div class="fleet-count">2,800</div>
+        <div class="fleet-sub">Primary commuter fleet</div>
+        <div class="fleet-bar"><div class="fleet-bar-fill" style="width:88%"></div></div>
+        <div class="fleet-pct">88% operational today</div>
+      </div>
+      <div class="fleet-card anim-d3">
+        <div class="fleet-icon">🚀</div>
+        <div class="fleet-type">Express</div>
+        <div class="fleet-count">700</div>
+        <div class="fleet-sub">Limited stop premium service</div>
+        <div class="fleet-bar"><div class="fleet-bar-fill" style="width:91%"></div></div>
+        <div class="fleet-pct">91% operational today</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ANALYTICS ══════════════════════════════════════════════ -->
+<section id="analytics">
+  <div class="container">
+    <div style="margin-bottom:36px">
+      <div class="section-label">Performance Dashboard</div>
+      <h2 class="section-title">Analytics & Insights</h2>
+      <p class="section-sub">Key performance metrics for Delhi's public transport network.</p>
+    </div>
+    <div class="analytics-grid">
+      <!-- Bar Chart Card -->
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Weekly Ridership (Lakhs)</div>
+          <div class="board-filters">
+            <button class="filter-btn active" onclick="setChartPeriod(this,'week')">Week</button>
+            <button class="filter-btn" onclick="setChartPeriod(this,'month')">Month</button>
+          </div>
+        </div>
+        <div class="chart-body">
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+      </div>
+      <!-- Donut Chart -->
+      <div class="chart-card">
+        <div class="chart-head"><div class="chart-title">Fleet by Type</div></div>
+        <div class="donut-wrap">
+          <svg class="donut-svg" viewBox="0 0 160 160" id="donutSvg">
+            <circle cx="80" cy="80" r="54" fill="transparent" stroke="rgba(255,255,255,0.05)" stroke-width="22"/>
+          </svg>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ALERTS ════════════════════════════════════════════════ -->
+<section id="alerts">
+  <div class="container">
+    <div style="margin-bottom:36px">
+      <div class="section-label">Service Operations</div>
+      <h2 class="section-title">Alerts & Quick Actions</h2>
+    </div>
+    <div class="alerts-layout">
+      <div>
+        <div style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700">Active Service Alerts</h3>
+          <button class="btn-primary" onclick="openModal('newAlert')">+ New Alert</button>
+        </div>
+        <div class="alerts-list" id="alertsList"></div>
+      </div>
+      <div class="quick-actions-panel">
+        <div class="qap-head">⚡ Quick Actions</div>
+        <div class="qap-body">
+          <button class="qa-btn" onclick="showToast('Route added to schedule successfully!','Route 892 created')">
+            <div class="qa-icon" style="background:rgba(255,119,34,0.12);">🗺</div>
+            <div><div class="qa-label">Add New Route</div><div class="qa-sub">Create a new bus route</div></div>
+          </button>
+          <button class="qa-btn" onclick="showToast('Schedule updated for 48 buses.','Timetable Revised')">
+            <div class="qa-icon" style="background:rgba(0,193,110,0.12);">📅</div>
+            <div><div class="qa-label">Update Schedule</div><div class="qa-sub">Revise timetables</div></div>
+          </button>
+          <button class="qa-btn" onclick="openModal('fleetDeploy')">
+            <div class="qa-icon" style="background:rgba(56,189,248,0.12);">🚌</div>
+            <div><div class="qa-label">Deploy Fleet</div><div class="qa-sub">Assign buses to routes</div></div>
+          </button>
+          <button class="qa-btn" onclick="showToast('Emergency protocol activated!','Code Red — All Supervisors Notified','var(--red)')">
+            <div class="qa-icon" style="background:rgba(255,71,87,0.12);">🚨</div>
+            <div><div class="qa-label">Emergency Protocol</div><div class="qa-sub">Activate incident response</div></div>
+          </button>
+          <button class="qa-btn" onclick="downloadReport()">
+            <div class="qa-icon" style="background:rgba(167,139,250,0.12);">📊</div>
+            <div><div class="qa-label">Download Report</div><div class="qa-sub">Export daily analytics</div></div>
+          </button>
+          <button class="qa-btn" onclick="showToast('Driver notifications sent to 2,341 drivers.','Broadcast Sent')">
+            <div class="qa-icon" style="background:rgba(255,184,48,0.12);">📢</div>
+            <div><div class="qa-label">Broadcast Message</div><div class="qa-sub">Notify all drivers</div></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <div class="logo-emblem">DTC</div>
+          <div class="logo-text">
+            <span class="logo-title">Delhi Transport Commission</span>
+            <span class="logo-sub">Government of NCT of Delhi</span>
+          </div>
+        </div>
+        <p>Providing safe, affordable, and efficient public transport services to the citizens of Delhi since 1948. Connecting 726 routes across the National Capital Territory.</p>
+        <div class="social-links">
+          <button class="social-btn" title="Twitter/X">𝕏</button>
+          <button class="social-btn" title="Facebook">f</button>
+          <button class="social-btn" title="YouTube">▶</button>
+          <button class="social-btn" title="WhatsApp">📱</button>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#departures">Live Departures</a></li>
+          <li><a href="#routes">Route Map</a></li>
+          <li><a href="#schedule">Timetables</a></li>
+          <li><a href="#fleet">Fleet Status</a></li>
+          <li><a href="#">Lost & Found</a></li>
+          <li><a href="#">Pass / Concession</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Administration</h4>
+        <ul>
+          <li><a href="#">Driver Portal</a></li>
+          <li><a href="#">Staff Login</a></li>
+          <li><a href="#">Depot Management</a></li>
+          <li><a href="#">Maintenance Records</a></li>
+          <li><a href="#">Incident Reports</a></li>
+          <li><a href="#">Payroll</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact & Help</h4>
+        <ul>
+          <li><a href="tel:011-23370000">📞 011-23370000</a></li>
+          <li><a href="mailto:info@dtc.nic.in">✉️ info@dtc.nic.in</a></li>
+          <li><a href="#">🏢 I.P. Estate, New Delhi</a></li>
+          <li><a href="#">Helpline: 1800-11-0093</a></li>
+          <li><a href="#">RTI Information</a></li>
+          <li><a href="#">Grievances</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2024 Delhi Transport Commission, Govt. of NCT of Delhi. All rights reserved.</div>
+      <div class="footer-flags">
+        <div class="gov-badge">GOV.IN</div>
+        <div style="display:flex;gap:2px">
+          <div class="flag-stripe" style="background:#FF9933"></div>
+          <div class="flag-stripe" style="background:#FFFFFF"></div>
+          <div class="flag-stripe" style="background:#138808"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ MODALS ═════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Modal</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ══════════════════════════════════════════════════ -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toastIcon">✅</div>
+  <div>
+    <div class="toast-text" id="toastText"></div>
+    <div class="toast-sub"  id="toastSub"></div>
+  </div>
+</div>
+
+<!-- ═══ JAVASCRIPT ═════════════════════════════════════════════ -->
+<script>
+/* ─── DATA ──────────────────────────────────────────────────── */
+const DEPARTURES = [
+  { route:'423', dest:'AIIMS via ITO',            plat:'3', time:'06:05', dep:5,   status:'on-time', occ:62, terminal:'kashmere' },
+  { route:'76',  dest:'Nehru Place via CP',        plat:'7', time:'06:12', dep:12,  status:'on-time', occ:44, terminal:'kashmere' },
+  { route:'544', dest:'Dwarka Sec 21 via Palam',   plat:'2', time:'06:20', dep:6,   status:'delayed', occ:78, terminal:'anand'    },
+  { route:'881', dest:'Saket via Hauz Khas',       plat:'1', time:'06:25', dep:25,  status:'on-time', occ:33, terminal:'sarai'    },
+  { route:'330', dest:'ISBT Sarai Kale Khan',      plat:'5', time:'06:30', dep:10,  status:'on-time', occ:55, terminal:'kashmere' },
+  { route:'101', dest:'Connaught Place',           plat:'4', time:'06:38', dep:2,   status:'delayed', occ:81, terminal:'sarai'    },
+  { route:'220', dest:'Rohini Sec 3 via Pitampura',plat:'9', time:'06:45', dep:45,  status:'on-time', occ:27, terminal:'kashmere' },
+  { route:'458', dest:'Lajpat Nagar',              plat:'6', time:'06:52', dep:52,  status:'on-time', occ:49, terminal:'anand'    },
+  { route:'614', dest:'New Delhi Railway Station', plat:'8', time:'07:00', dep:60,  status:'on-time', occ:60, terminal:'sarai'    },
+  { route:'890', dest:'Indira Gandhi Airport T3',  plat:'2', time:'07:10', dep:70,  status:'on-time', occ:36, terminal:'anand'    },
+];
+
+const ROUTES = [
+  { id:'423', from:'Kashmere Gate ISBT', to:'AIIMS South Campus', dist:'18.4', time:'55', buses:24, freq:'8-12 min', status:'active' },
+  { id:'076', from:'Rohini Sector 3',    to:'Nehru Place Terminal',dist:'22.7', time:'68', buses:18, freq:'10-15 min',status:'active' },
+  { id:'544', from:'Anand Vihar ISBT',   to:'Dwarka Sector 21',   dist:'34.2', time:'90', buses:20, freq:'12-18 min',status:'delay'  },
+  { id:'881', from:'Delhi Gate Terminal',to:'Saket District Centre',dist:'15.8',time:'45', buses:16, freq:'15-20 min',status:'active' },
+  { id:'330', from:'Hauz Khas Enclave',  to:'ISBT Sarai Kale Khan',dist:'12.3',time:'38', buses:14, freq:'10-14 min',status:'active' },
+  { id:'101', from:'Lajpat Nagar',       to:'Connaught Place',    dist:'9.6',  time:'30', buses:22, freq:'6-10 min', status:'delay'  },
+];
+
+const ROUTE_LIST_DATA = [
+  { num:'423', name:'Kashmere Gate → AIIMS',    sub:'18.4 km | 24 buses',   buses:24 },
+  { num:'076', name:'Rohini → Nehru Place',     sub:'22.7 km | 18 buses',   buses:18 },
+  { num:'544', name:'Anand Vihar → Dwarka',     sub:'34.2 km | 20 buses',   buses:20 },
+  { num:'881', name:'Delhi Gate → Saket',       sub:'15.8 km | 16 buses',   buses:16 },
+  { num:'330', name:'Hauz Khas → Sarai',        sub:'12.3 km | 14 buses',   buses:14 },
+  { num:'101', name:'Lajpat Nagar → CP',        sub:'9.6 km  | 22 buses',   buses:22 },
+  { num:'220', name:'Kashmere → Pitampura',     sub:'28.1 km | 19 buses',   buses:19 },
+  { num:'458', name:'Anand Vihar → Lajpat',     sub:'19.3 km | 17 buses',   buses:17 },
+];
+
+const SCHEDULE_SOUTH = ['05:30','05:42','05:55','06:05','06:18','06:30','06:42','06:55','07:05','07:15','07:25','07:35','07:45','07:55','08:05','08:15','08:28','08:40','08:52','09:05','09:18','09:32','09:48','10:05','10:22','10:40','11:00','11:20','11:40','12:00','12:20','12:40','13:00','13:20','13:42','14:05','14:28','14:52','15:15','15:35','15:55','16:10','16:25','16:38','16:50','17:00','17:10','17:20','17:30','17:40','17:50','18:00','18:10','18:22','18:35','18:48','19:02','19:18','19:35','19:55','20:15','20:40','21:10','21:45','22:25','23:10','23:55'];
+const SCHEDULE_NORTH = ['05:35','05:48','06:00','06:12','06:25','06:38','06:50','07:02','07:12','07:22','07:32','07:42','07:52','08:02','08:12','08:25','08:38','08:50','09:02','09:15','09:28','09:42','09:58','10:15','10:32','10:50','11:10','11:30','11:50','12:10','12:30','12:52','13:12','13:35','13:58','14:22','14:48','15:12','15:38','15:58','16:18','16:32','16:45','16:58','17:08','17:18','17:28','17:38','17:48','17:58','18:08','18:18','18:30','18:42','18:55','19:08','19:22','19:38','19:58','20:18','20:42','21:12','21:48','22:28','23:12','23:58'];
+
+const ALERTS_DATA = [
+  { type:'critical', icon:'🚨', title:'Road Closure — Chandni Chowk Area', desc:'NDMC road closure due to emergency repairs. Routes 423, 460, 512 diverted via Ring Road. Expected duration: 3 hours.', time:'20 mins ago', routes:['423','460','512'], tag:'critical' },
+  { type:'warning',  icon:'⚠️', title:'High Passenger Load — Route 544',    desc:'Route 544 experiencing heavy overcrowding at Anand Vihar ISBT. Additional 3 buses deployed. Frequency increased to every 6 minutes.', time:'45 mins ago', routes:['544'], tag:'warning' },
+  { type:'info',     icon:'ℹ️',  title:'Scheduled Maintenance — Depot 6',    desc:'Routine vehicle maintenance scheduled at Depot 6, Rohini from 00:00 to 04:30 hrs tonight. 8 buses temporarily offline.', time:'2 hrs ago', routes:['220','330'], tag:'info' },
+  { type:'warning',  icon:'⚠️', title:'Weather Advisory — Heavy Fog',       desc:'Dense fog advisory issued. All drivers on Ring Routes to maintain reduced speed. Expected to clear by 09:00 hrs.', time:'3 hrs ago', routes:['ALL'], tag:'warning' },
+];
+
+const DONUT_DATA = [
+  { label:'Standard CNG', pct:41, color:'#FF7722' },
+  { label:'Low-Floor AC',  pct:31, color:'#38BDF8' },
+  { label:'Electric EV',   pct:18, color:'#00C16E' },
+  { label:'Express',       pct:10, color:'#A78BFA' },
+];
+
+const BAR_DATA = {
+  week:  [{ label:'Mon', a:38, b:42 },{ label:'Tue', a:42, b:45 },{ label:'Wed', a:45, b:40 },{ label:'Thu', a:50, b:48 },{ label:'Fri', a:55, b:52 },{ label:'Sat', a:48, b:44 },{ label:'Sun', a:35, b:38 }],
+  month: [{ label:'W1', a:38, b:40 },{ label:'W2', a:44, b:46 },{ label:'W3', a:50, b:52 },{ label:'W4', a:55, b:53 }],
+};
+
+/* ─── RENDER FUNCTIONS ──────────────────────────────────────── */
+function renderDepartures(filter='all') {
+  const tbody = document.getElementById('depTableBody');
+  const data  = filter === 'all' ? DEPARTURES : DEPARTURES.filter(d => d.terminal === filter);
+  const now   = new Date();
+
+  tbody.innerHTML = data.map((d,i) => {
+    const isDelayed = d.status === 'delayed';
+    const statusTag = isDelayed
+      ? `<span class="tag tag-amber"><span class="dot dot-amber"></span>Delayed ${Math.floor(Math.random()*10+3)} min</span>`
+      : `<span class="tag tag-green"><span class="dot dot-green"></span>On Time</span>`;
+    const pct  = d.occ;
+    const barC = pct > 75 ? 'var(--red)' : pct > 50 ? 'var(--amber)' : 'var(--green)';
+    return `<tr style="animation:fadeUp 0.3s ease ${i*0.04}s both">
+      <td><span class="route-num">${d.route}</span></td>
+      <td style="font-weight:500">${d.dest}</td>
+      <td><span class="plat-badge">${d.plat}</span></td>
+      <td><span class="dep-time">${d.time}</span></td>
+      <td>${statusTag}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%;background:${barC}"></div></div>
+          <span style="font-size:12px;color:var(--muted)">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRoutes() {
+  const grid = document.getElementById('routesGrid');
+  grid.innerHTML = ROUTES.map((r,i) => {
+    const isDelay = r.status === 'delay';
+    return `<div class="route-card animate-up anim-d${(i%5)+1}" onclick="openModal('routeDetail','${r.id}')">
+      <div class="route-card-top">
+        <span class="route-id">${r.id}</span>
+        ${isDelay
+          ? `<span class="tag tag-amber"><span class="dot dot-amber"></span>Delay</span>`
+          : `<span class="tag tag-green"><span class="dot dot-green"></span>Active</span>`}
+      </div>
+      <div class="route-card-body">
+        <div class="route-endpoints">
+          <div class="endpoint">
+            <div class="ep-icon ep-start">🟢</div>
+            <div><div class="ep-label">From</div><div class="ep-name">${r.from}</div></div>
+          </div>
+          <div class="endpoint">
+            <div class="ep-icon ep-end">🔴</div>
+            <div><div class="ep-label">To</div><div class="ep-name">${r.to}</div></div>
+          </div>
+        </div>
+        <div class="route-meta">
+          <div class="route-meta-item"><div class="meta-val">${r.dist}<span style="font-size:11px;color:var(--muted)"> km</span></div><div class="meta-key">Distance</div></div>
+          <div class="route-meta-item"><div class="meta-val">${r.time}<span style="font-size:11px;color:var(--muted)"> m</span></div><div class="meta-key">Duration</div></div>
+          <div class="route-meta-item"><div class="meta-val">${r.buses}</div><div class="meta-key">Buses</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRouteList() {
+  const list = document.getElementById('routeList');
+  list.innerHTML = ROUTE_LIST_DATA.map((r,i) => `
+    <div class="route-list-item ${i===0?'active':''}" onclick="selectRoute(this,'${r.num}','${r.name}')">
+      <div class="rli-left">
+        <span class="rli-num">${r.num}</span>
+        <div><div class="rli-name">${r.name}</div><div class="rli-sub">${r.sub}</div></div>
+      </div>
+      <span class="rli-count">${r.buses} 🚌</span>
+    </div>`).join('');
+}
+
+function renderSchedule() {
+  const sp = document.getElementById('southPanel');
+  const np = document.getElementById('northPanel');
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+
+  const render = (times, container) => {
+    container.innerHTML = times.map(t => {
+      const [h,m] = t.split(':').map(Number);
+      const tMin  = h*60 + m;
+      const isPeak = (tMin>=420 && tMin<=570) || (tMin>=960 && tMin<=1080);
+      const isPast = tMin < nowMin;
+      return `<span class="time-slot ${isPeak?'peak':''}" style="${isPast?'opacity:0.35':''}">
+        ${t}<span class="ts-min">${isPeak?'⚡':''}</span>
+      </span>`;
+    }).join('');
+  };
+  render(SCHEDULE_SOUTH, sp);
+  render(SCHEDULE_NORTH, np);
+}
+
+function renderAlerts() {
+  const list = document.getElementById('alertsList');
+  list.innerHTML = ALERTS_DATA.map(a => `
+    <div class="alert-card alert-${a.type}">
+      <div class="alert-icon-wrap">${a.icon}</div>
+      <div class="alert-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px">
+          <div class="alert-title">${a.title}</div>
+          <span class="tag tag-${a.type==='critical'?'red':a.type==='warning'?'amber':'sky'}">${a.type}</span>
+        </div>
+        <div class="alert-desc">${a.desc}</div>
+        <div class="alert-meta">
+          <span class="alert-time">🕐 ${a.time}</span>
+          <div class="alert-routes">${a.routes.map(r=>`<span class="alert-route-badge">${r}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderBarChart(period='week') {
+  const data = BAR_DATA[period];
+  const max  = Math.max(...data.flatMap(d => [d.a,d.b]));
+  const chart = document.getElementById('barChart');
+  chart.innerHTML = data.map(d => `
+    <div class="bar-group">
+      <div class="bar-value">${d.a+d.b}</div>
+      <div class="bar-wrap">
+        <div class="bar" style="height:${(d.a/max)*160}px;background:linear-gradient(180deg,var(--saffron),var(--amber));" title="${d.a}L AC+CNG"></div>
+        <div class="bar" style="height:${(d.b/max)*160}px;background:linear-gradient(180deg,var(--sky),#7DD3FC);" title="${d.b}L EV+Express"></div>
+      </div>
+      <div class="bar-label">${d.label}</div>
+    </div>`).join('');
+}
+
+function renderDonut() {
+  const svg  = document.getElementById('donutSvg');
+  const leg  = document.getElementById('donutLegend');
+  const r    = 54, cx = 80, cy = 80;
+  const circ = 2 * Math.PI * r;
+  let offset = -circ * 0.25; // start at top
+
+  let paths = '';
+  DONUT_DATA.forEach(d => {
+    const len = circ * (d.pct/100);
+    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="transparent"
+      stroke="${d.color}" stroke-width="22"
+      stroke-dasharray="${len} ${circ-len}"
+      stroke-dashoffset="${offset}"
+      style="transition:stroke-dashoffset 0.6s ease"/>`;
+    offset -= len;
+  });
+  svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="transparent" stroke="rgba(255,255,255,0.05)" stroke-width="22"/>
+    ${paths}
+    <text x="${cx}" y="${cy-8}" text-anchor="middle" fill="white" font-family="Rajdhani,sans-serif" font-size="22" font-weight="700">6,800</text>
+    <text x="${cx}" y="${cy+12}" text-anchor="middle" fill="#7A93B4" font-size="11" font-family="Noto Sans,sans-serif">Total Buses</text>`;
+
+  leg.innerHTML = DONUT_DATA.map(d => `
+    <div class="dl-item">
+      <div class="dl-left"><div class="dl-dot" style="background:${d.color}"></div>${d.label}</div>
+      <div class="dl-pct" style="color:${d.color}">${d.pct}%</div>
+    </div>`).join('');
+}
+
+/* ─── INTERACTION ───────────────────────────────────────────── */
+function filterDep(btn, filter) {
+  document.querySelectorAll('#departures .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDepartures(filter);
+}
+function setChartPeriod(btn, p) {
+  document.querySelectorAll('#analytics .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBarChart(p);
+}
+function selectRoute(el, num, name) {
+  document.querySelectorAll('.route-list-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('scheduleRouteTitle').textContent = `Route ${num} — ${name}`;
+  renderSchedule();
+}
+function switchTab(btn, id) {
+  document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ─── MODALS ────────────────────────────────────────────────── */
+const MODAL_CONTENT = {
+  login: {
+    title: '🔐 Admin Login',
+    html: `<div style="display:flex;flex-direction:column;gap:16px">
+      <div class="field"><label>Username / Staff ID</label><input type="text" placeholder="e.g. DTC_ADMIN_001"/></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="••••••••"/></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--saffron)"/> Remember me
+        </label>
+        <a href="#" style="font-size:13px;color:var(--saffron)">Forgot Password?</a>
+      </div>
+      <button class="btn-search" onclick="showToast('Login successful! Welcome back.','Admin Dashboard');closeModal()">Login to Dashboard</button>
+      <p style="text-align:center;font-size:12px;color:var(--muted)">Authorised DTC personnel only. All access is logged.</p>
+    </div>`
+  },
+  addRoute: {
+    title: '🗺 Add New Route',
+    html: `<div style="display:flex;flex-direction:column;gap:16px">
+      <div class="field-group">
+        <div class="field"><label>Route Number</label><input type="text" placeholder="e.g. 892"/></div>
+        <div class="field"><label>Route Type</label><select><option>Standard CNG</option><option>Low-Floor AC</option><option>Electric EV</option><option>Express</option></select></div>
+      </div>
+      <div class="field"><label>Starting Terminal</label><input type="text" placeholder="e.g. Kashmere Gate ISBT"/></div>
+      <div class="field"><label>Ending Terminal</label><input type="text" placeholder="e.g. Badarpur Border"/></div>
+      <div class="field"><label>Intermediate Stops (comma-separated)</label><input type="text" placeholder="e.g. ITO, Pragati Maidan, Lajpat Nagar"/></div>
+      <div class="field-group">
+        <div class="field"><label>Distance (km)</label><input type="number" placeholder="e.g. 22.4"/></div>
+        <div class="field"><label>Buses Assigned</label><input type="number" placeholder="e.g. 16"/></div>
+      </div>
+      <button class="btn-search" onclick="showToast('Route 892 added successfully!','New Route Created');closeModal()">✓ Create Route</button>
+    </div>`
+  },
+  newAlert: {
+    title: '🚨 Create Service Alert',
+    html: `<div style="display:flex;flex-direction:column;gap:16px">
+      <div class="field-group">
+        <div class="field"><label>Alert Type</label><select><option>Critical</option><option>Warning</option><option>Info</option></select></div>
+        <div class="field"><label>Affected Routes</label><input type="text" placeholder="e.g. 423, 544, ALL"/></div>
+      </div>
+      <div class="field"><label>Alert Title</label><input type="text" placeholder="Brief description of issue"/></div>
+      <div class="field"><label>Detailed Message</label>
+        <textarea style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:12px;color:white;font-family:inherit;font-size:14px;resize:vertical;min-height:100px" placeholder="Provide details about the incident, expected duration, and passenger instructions..."></textarea>
+      </div>
+      <div class="field-group">
+        <div class="field"><label>Start Time</label><input type="datetime-local"/></div>
+        <div class="field"><label>Expected End Time</label><input type="datetime-local"/></div>
+      </div>
+      <button class="btn-search" onclick="showToast('Alert published to all channels!','Service Alert Created');closeModal()">📢 Publish Alert</button>
+    </div>`
+  },
+  fleetDeploy: {
+    title: '🚌 Deploy Fleet',
+    html: `<div style="display:flex;flex-direction:column;gap:16px">
+      <div class="field-group">
+        <div class="field"><label>Route Number</label><input type="text" placeholder="e.g. 423"/></div>
+        <div class="field"><label>Number of Buses</label><input type="number" placeholder="e.g. 8" min="1"/></div>
+      </div>
+      <div class="field-group">
+        <div class="field"><label>Bus Type</label><select><option>Any Available</option><option>Electric EV</option><option>Low-Floor AC</option><option>Standard CNG</option></select></div>
+        <div class="field"><label>Depot</label><select><option>Depot 1 — Kashmere Gate</option><option>Depot 3 — Rohini</option><option>Depot 6 — Dwarka</option><option>Depot 9 — Saket</option></select></div>
+      </div>
+      <div class="field"><label>Deployment Duration</label><select><option>Full Day (All shifts)</option><option>Morning Peak (6 AM–10 AM)</option><option>Evening Peak (5 PM–9 PM)</option><option>Custom Duration</option></select></div>
+      <button class="btn-search" onclick="showToast('8 buses deployed to Route 423!','Fleet Deployed');closeModal()">✓ Deploy Buses</button>
+    </div>`
+  },
+};
+
+MODAL_CONTENT.routeDetail = (id) => {
+  const r = ROUTES.find(x => x.id === id);
+  if (!r) return { title: 'Route Detail', html: '<p>Not found</p>' };
+  return {
+    title: `Route ${r.id} Details`,
+    html: `<div style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card" style="text-align:center">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">FROM</div>
+          <div style="font-weight:700;color:var(--green)">${r.from}</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">TO</div>
+          <div style="font-weight:700;color:var(--red)">${r.to}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+        <div class="card"><div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--saffron)">${r.dist} km</div><div style="font-size:12px;color:var(--muted)">Distance</div></div>
+        <div class="card"><div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--sky)">${r.time} min</div><div style="font-size:12px;color:var(--muted)">Journey Time</div></div>
+        <div class="card"><div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--green)">${r.buses}</div><div style="font-size:12px;color:var(--muted)">Buses Assigned</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.8px">Frequency</div>
+        <div style="font-weight:600">${r.freq}</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-search" style="flex:1" onclick="showToast('Schedule updated for Route ${r.id}','Timetable Revised');closeModal()">📅 Edit Schedule</button>
+        <button class="btn-search" style="flex:1;background:linear-gradient(135deg,var(--sky),#7DD3FC)" onclick="showToast('${r.buses} buses on Route ${r.id} tracked','Fleet Location Updated');closeModal()">📡 Track Buses</button>
+      </div>
+    </div>`
+  };
+};
+
+function openModal(type, arg) {
+  const content = typeof MODAL_CONTENT[type] === 'function'
+    ? MODAL_CONTENT[type](arg)
+    : MODAL_CONTENT[type];
+  document.getElementById('modalTitle').textContent = content.title;
+  document.getElementById('modalBody').innerHTML   = content.html;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModalOutside(e) { if (e.target === e.currentTarget) closeModal(); }
+
+/* ─── TOAST ─────────────────────────────────────────────────── */
+let toastTimer;
+function showToast(text, sub='', borderColor='var(--green)') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = text;
+  document.getElementById('toastSub').textContent  = sub;
+  t.style.borderLeftColor = borderColor;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3600);
+}
+
+/* ─── MISC ──────────────────────────────────────────────────── */
+function toggleNav() {
+  document.getElementById('mobileNav').classList.toggle('open');
+}
+function closeNav() {
+  document.getElementById('mobileNav').classList.remove('open');
+}
+function toggleLang(btn) {
+  btn.textContent = btn.textContent === 'हिंदी' ? 'English' : 'हिंदी';
+  showToast('Language toggled (UI stays in English for demo)', 'Language Switch');
+}
+function searchBus() {
+  const from = document.getElementById('fromStop').value;
+  const to   = document.getElementById('toStop').value;
+  if (!from || !to) { showToast('Please fill both stops to search.','Search Error','var(--amber)'); return; }
+  showToast(`Found 4 buses from ${from} to ${to}`, 'Search Complete');
+}
+function downloadReport() {
+  showToast('Daily report (PDF) download started…','DTC_Report_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+/* ─── CLOCK ─────────────────────────────────────────────────── */
+function updateClock() {
+  const n = new Date();
+  document.getElementById('liveTime').textContent = n.toLocaleTimeString('en-IN',{ hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ─── DATE DEFAULT ──────────────────────────────────────────── */
+document.getElementById('tripDate').valueAsDate = new Date();
+
+/* ─── COUNTER ANIMATION ─────────────────────────────────────── */
+function animateCounters() {
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = +el.dataset.target;
+    const suffix = target >= 1000000 ? 'L' : target >= 1000 ? '' : '';
+    let start = 0, dur = 1800;
+    const step = t => {
+      start += dur/60;
+      const progress = Math.min(start/dur, 1);
+      const val = Math.floor(progress * target);
+      if (target >= 1000000) el.textContent = (val/100000).toFixed(1) + 'L';
+      else el.textContent = val.toLocaleString('en-IN');
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+/* ─── SCROLL SPY ─────────────────────────────────────────────── */
+const sections = ['hero','departures','routes','schedule','fleet','analytics','alerts'];
+const navLinks  = document.querySelectorAll('nav a');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 90;
+  let cur = 'hero';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= y) cur = id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#'+cur);
+  });
+});
+
+/* ─── INIT ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderDepartures();
+  renderRoutes();
+  renderRouteList();
+  renderSchedule();
+  renderAlerts();
+  renderBarChart();
+  renderDonut();
+  animateCounters();
+});
+</script>
+</body>
+</html>
